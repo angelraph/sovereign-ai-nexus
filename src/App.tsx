@@ -4,20 +4,15 @@ import {
   Network, 
   Trophy, 
   Cpu, 
-  Lock, 
-  Unlock, 
   FileCode, 
   Terminal, 
   Send, 
   Upload, 
   Database, 
-  Plus, 
   Play, 
   CheckCircle, 
   Server, 
   User, 
-  RefreshCw,
-  ExternalLink,
   Info,
   Clock,
   Zap,
@@ -112,7 +107,7 @@ export default function App() {
     logic: 85,
     speed: 80
   });
-  const [opponentAgent, setOpponentAgent] = useState<Agent>({
+  const [opponentAgent] = useState<Agent>({
     name: 'Giga-Trader-0G',
     role: 'Trader',
     strategy: 'High-frequency Arbitrage & Liquidation',
@@ -687,7 +682,7 @@ export default function App() {
             <div className="flex-1 flex flex-col h-full overflow-hidden">
               <div className="bg-[#121A2C] border-b border-slate-800 px-6 py-3 flex justify-between items-center shrink-0">
                 <div>
-                  <h2 class="text-sm font-bold text-white tracking-wide">Confidential Agent Vault</h2>
+                  <h2 className="text-sm font-bold text-white tracking-wide">Confidential Agent Vault</h2>
                   <p className="text-[10px] text-slate-400">Private AI Compute via 0G TEE Infrastructure</p>
                 </div>
                 <div className="flex items-center space-x-2">
