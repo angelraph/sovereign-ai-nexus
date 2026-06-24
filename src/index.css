@@ -169,3 +169,97 @@ body {
   pointer-events: none;
   z-index: 100;
 }
+
+/* Bracket styling */
+.bracket-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  height: 100%;
+  min-height: 480px;
+}
+
+.bracket-match {
+  position: relative;
+  background: rgba(15, 20, 32, 0.6);
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  border-radius: 12px;
+  padding: 12px;
+  width: 220px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bracket-match:hover {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.bracket-match-active {
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.25);
+}
+
+.gold-glow {
+  color: #ffd700;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+}
+
+.trophy-container {
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
+  animation: pulse-glow 4s ease-in-out infinite;
+}
+
+.glow-card {
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/* Dynamic Stats & Live Validator styling */
+.stats-bar-bg {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 9999px;
+  overflow: hidden;
+  height: 8px;
+  position: relative;
+}
+
+.stats-bar-fill-left {
+  background: linear-gradient(90deg, var(--accent-cyan), #3b82f6);
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stats-bar-fill-right {
+  background: linear-gradient(90deg, #3b82f6, var(--accent-purple));
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.validator-step-entry {
+  animation: slide-in 0.4s ease-out forwards;
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.glow-border-cyan {
+  border-color: rgba(0, 240, 255, 0.4);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+}
+
+.glow-border-purple {
+  border-color: rgba(168, 85, 247, 0.4);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
+}
+
+
