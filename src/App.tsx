@@ -686,6 +686,7 @@ export default function App() {
   };
 
   const handleRecordArenaMatch = () => {
+    if (!arenaWinner || !arenaScore) return;
     const txHash = generateKeccakHash(arenaWinner + arenaScore + Date.now().toString());
     const receipt = {
       transactionHash: txHash,
