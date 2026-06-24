@@ -1,26 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Shield, 
-  Network, 
   Trophy, 
   Cpu, 
   FileCode, 
   Terminal, 
   Send, 
-  Upload, 
   Database, 
   Play, 
   CheckCircle, 
   Server, 
   User, 
-  Info,
-  Clock,
-  Zap,
+  Clock, 
   Sparkles,
-  Activity,
-  ArrowRight
+  Activity
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+// @ts-ignore
 import trophyImg from '../zero_cup_trophy.png';
 
 // Interfaces
@@ -611,8 +607,10 @@ export default function App() {
             possession: { user: boundedPoss, opp: 100 - boundedPoss },
             shots: { user: newShotsUser, opp: newShotsOpp },
             accuracy: { user: Math.min(98, accUser), opp: Math.min(98, accOpp) },
-            xg: parseFloat((prev.xg.user + addXgUser).toFixed(2)),
-            xg: parseFloat((prev.xg.opp + addXgOpp).toFixed(2))
+            xg: {
+              user: parseFloat((prev.xg.user + addXgUser).toFixed(2)),
+              opp: parseFloat((prev.xg.opp + addXgOpp).toFixed(2))
+            }
           };
         });
 
