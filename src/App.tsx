@@ -234,14 +234,42 @@ export default function App() {
       let aiText = "";
       const textLower = userMsg.text.toLowerCase();
 
-      if (textLower.includes('tactic') || textLower.includes('formation') || textLower.includes('play')) {
+      // Mock teams database
+      const teams = [
+        { name: 'England', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stats: 'offense 85%, defense 80%' },
+        { name: 'Ghana', flag: '🇬🇭', stats: 'offense 75%, defense 72%' },
+        { name: 'France', flag: '🇫🇷', stats: 'offense 90%, defense 85%' },
+        { name: 'Spain', flag: '🇪🇸', stats: 'offense 88%, defense 82%' },
+        { name: 'Germany', flag: '🇩🇪', stats: 'offense 84%, defense 78%' },
+        { name: 'Argentina', flag: '🇦🇷', stats: 'offense 89%, defense 86%' },
+        { name: 'Brazil', flag: '🇧🇷', stats: 'offense 92%, defense 84%' },
+        { name: 'Portugal', flag: '🇵🇹', stats: 'offense 86%, defense 80%' },
+        { name: 'Netherlands', flag: '🇳🇱', stats: 'offense 83%, defense 81%' }
+      ];
+
+      const matchedTeams = teams.filter(t => textLower.includes(t.name.toLowerCase()));
+
+      if (matchedTeams.length >= 2) {
+        const t1 = matchedTeams[0];
+        const t2 = matchedTeams[1];
+        
+        // Calculate a stable mock score based on team names
+        const val1 = (t1.name.charCodeAt(0) + t2.name.charCodeAt(0)) % 4;
+        const val2 = (t1.name.charCodeAt(1) + t2.name.charCodeAt(1)) % 3;
+        
+        aiText = `Query processed inside TEE Secure Enclave. DeAI Sports Model result:\n\nYesterday's international fixture between ${t1.flag} **${t1.name}** and ${t2.flag} **${t2.name}** ended in a **${val1} - ${val2}** scoreline. ${t1.name} dominated midfield possession at 58% utilizing a structured mid-block, while ${t2.name} looked dangerous on rapid counter-attacks. Cryptographic verification registered on consensus ledger.`;
+      } else if (matchedTeams.length === 1) {
+        const t = matchedTeams[0];
+        aiText = `Retrieved squad parameters for ${t.flag} **${t.name}** from secure TEE memory registers:\n- Team Rating Index: A-\n- Tactical Blueprint: 4-3-3 High Press\n- Physical Capacity: ${t.stats}\nOur Attested model projects a 74% win probability for their next bracket fixture.`;
+      } else if (textLower.includes('tactic') || textLower.includes('formation') || textLower.includes('play')) {
         aiText = "Based on our model analysis in TEE: A 4-3-3 formation with high defensive line matches best against defensive low-blocks. Gegenpress tactics require a high physical chemistry index (>85%) to prevent transition gaps.";
       } else if (textLower.includes('predict') || textLower.includes('winner') || textLower.includes('cup')) {
         aiText = "0G DeAI engine calculates France and Brazil as the highest probability finalists (26.4% and 24.1% respectively). Argentine squad depth shows a 68% win-rate in standard climate simulations.";
       } else if (textLower.includes('tee') || textLower.includes('security') || textLower.includes('attestation')) {
         aiText = "The Scout Enclave isolates all tactical data inside Intel TDX hardware. The system signs the resulting reports in isolated memory, proving that no third-party tampered with the weights or statistics during inference.";
       } else {
-        aiText = `Tactical query processed within 0G TEE Enclave. Models run with fully attested weights. Cryptographic proof sealed under consensus block height ${blockHeight}.`;
+        const truncatedQuery = userMsg.text.split(' ').slice(0, 5).join(' ');
+        aiText = `Secure Scout model output for: "${truncatedQuery}..." \n\n"Tactical databases indicate that low-block defensive structures suffer an 11% error increase under high offensive press load. Midfield transition speed remains the primary scoring multiplier."\n\nAttestation proof verified under block height ${blockHeight}.`;
       }
 
       const chatHash = generateKeccakHash(userMsg.text + aiText);
