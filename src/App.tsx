@@ -63,6 +63,241 @@ interface LeaderboardTeam {
   score: number;
 }
 
+interface DebateMessage {
+  id: string;
+  minute: number;
+  managerName: string;
+  role: string;
+  text: string;
+  type: 'user' | 'opponent';
+}
+
+const drawPitch = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+  ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = '#090d16';
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.strokeStyle = 'rgba(0, 240, 255, 0.15)';
+  ctx.lineWidth = 1.5;
+  ctx.shadowBlur = 4;
+  ctx.shadowColor = 'rgba(0, 240, 255, 0.2)';
+
+  const pad = 20;
+  ctx.strokeRect(pad, pad, width - pad * 2, height - pad * 2);
+
+  ctx.beginPath();
+  ctx.moveTo(width / 2, pad);
+  ctx.lineTo(width / 2, height - pad);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(width / 2, height / 2, 45, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.fillStyle = 'rgba(0, 240, 255, 0.4)';
+  ctx.beginPath();
+  ctx.arc(width / 2, height / 2, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeRect(pad, height / 2 - 70, 60, 140);
+  ctx.strokeRect(pad, height / 2 - 30, 20, 60);
+
+  ctx.strokeRect(width - pad - 60, height / 2 - 70, 60, 140);
+  ctx.strokeRect(width - pad - 20, height / 2 - 30, 20, 60);
+
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(pad, height / 2 - 20);
+  ctx.lineTo(pad - 8, height / 2 - 20);
+  ctx.lineTo(pad - 8, height / 2 + 20);
+  ctx.lineTo(pad, height / 2 + 20);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(width - pad, height / 2 - 20);
+  ctx.lineTo(width - pad + 8, height / 2 - 20);
+  ctx.lineTo(width - pad + 8, height / 2 + 20);
+  ctx.lineTo(width - pad, height / 2 + 20);
+  ctx.stroke();
+
+  ctx.shadowBlur = 0;
+};
+
+const getPlayerPositions = (
+  team: 'user' | 'opp', 
+  tactic: string, 
+  phase: 'buildup' | 'progression' | 'shooting' | 'resolution',
+  isUserAttacking: boolean,
+  width: number,
+  height: number
+) => {
+  const pad = 20;
+  const w = width - pad * 2;
+  const h = height - pad * 2;
+
+  const isCatenaccio = tactic.includes('Catenaccio');
+  const isGegenpress = tactic.includes('Gegenpress');
+
+  let coords: [number, number][] = [];
+
+  if (team === 'user') {
+    let gk = 10;
+    let def = 30;
+    let mid = 52;
+    let att = 72;
+
+    if (isUserAttacking) {
+      if (phase === 'buildup') {
+        def = 33; mid = 54; att = 74;
+      } else if (phase === 'progression') {
+        def = 40; mid = 62; att = 80;
+      } else if (phase === 'shooting' || phase === 'resolution') {
+        def = 45; mid = 68; att = 86;
+      }
+    } else {
+      if (isCatenaccio) {
+        def = 22; mid = 42; att = 60;
+      } else if (isGegenpress) {
+        def = 36; mid = 55; att = 70;
+      } else {
+        def = 28; mid = 48; att = 65;
+      }
+    }
+
+    coords = [
+      [gk, 50],
+      [def, 22], [def, 40], [def, 60], [def, 78],
+      [mid, 32], [mid, 50], [mid, 68],
+      [att, 25], [att + 4, 50], [att, 75]
+    ];
+  } else {
+    let gk = 90;
+    let def = 70;
+    let mid = 48;
+    let att = 28;
+
+    if (!isUserAttacking) {
+      if (phase === 'buildup') {
+        def = 67; mid = 46; att = 26;
+      } else if (phase === 'progression') {
+        def = 60; mid = 38; att = 20;
+      } else if (phase === 'shooting' || phase === 'resolution') {
+        def = 55; mid = 32; att = 14;
+      }
+    } else {
+      if (isCatenaccio) {
+        def = 78; mid = 58; att = 40;
+      } else if (isGegenpress) {
+        def = 64; mid = 45; att = 30;
+      } else {
+        def = 72; mid = 52; att = 35;
+      }
+    }
+
+    coords = [
+      [gk, 50],
+      [def, 16], [def, 33], [def, 50], [def, 67], [def, 84],
+      [mid, 30], [mid, 50], [mid, 70],
+      [att, 35], [att, 65]
+    ];
+  }
+
+  return coords.map(([xp, yp]) => ({
+    x: pad + (xp / 100) * w,
+    y: pad + (yp / 100) * h
+  }));
+};
+
+const interpolate = (p1: { x: number, y: number }, p2: { x: number, y: number }, t: number) => {
+  return {
+    x: p1.x + (p2.x - p1.x) * t,
+    y: p1.y + (p2.y - p1.y) * t
+  };
+};
+
+const getDebateExchange = (
+  round: number, 
+  attackerName: string, 
+  defenderName: string, 
+  attackerRole: string, 
+  defenderRole: string, 
+  isGoal: boolean
+) => {
+  if (round === 1) {
+    const attTexts: Record<string, string> = {
+      'Tiki-Taka Maestro': "Our passing triangles are circulating at high tempo. We will starve you of possession.",
+      'Gegenpress Coach': "Frontline press activated! We are trapping your defenders in their own third.",
+      'Catenaccio Specialist': "Go ahead, pass it around. We sit in a disciplined shape, waiting for your lines to overcommit."
+    };
+    const defTexts: Record<string, string> = {
+      'Tiki-Taka Maestro': "We stretch our shape to intercept the lanes cleanly. Your press won't work.",
+      'Gegenpress Coach': "Aggressive counter-pressing active. We will smother your transition before it starts.",
+      'Catenaccio Specialist': "Our low-block solidity is active. We pack the box corridors. No entry."
+    };
+    return {
+      attacker: attTexts[attackerRole] || "Launching a rapid high-intensity offensive transition.",
+      defender: defTexts[defenderRole] || "Deploying defensive block to neutralize the advance."
+    };
+  }
+  if (round === 2) {
+    const attTexts: Record<string, string> = {
+      'Tiki-Taka Maestro': "We are exploiting the half-space. Moving wingbacks higher to overwhelm your backline.",
+      'Gegenpress Coach': "Heavy metal counter-press triggered! Winning the ball back in your transition zone.",
+      'Catenaccio Specialist': "Interception complete. Releasing a rapid vertical counter-attack behind your lines."
+    };
+    const defTexts: Record<string, string> = {
+      'Tiki-Taka Maestro': "Circulating quick passes to break your press. Keeping composure.",
+      'Gegenpress Coach': "Frontline swarm! We double-team the winger to limit crossing angles.",
+      'Catenaccio Specialist': "Deep defensive pocket set up. Intercepting and locking down the channels."
+    };
+    return {
+      attacker: attTexts[attackerRole] || "Pushing lines forward and overloading midfield lanes.",
+      defender: defTexts[defenderRole] || "Holding defensive positions to choke spaces."
+    };
+  }
+  if (round === 3) {
+    const attTexts: Record<string, string> = {
+      'Tiki-Taka Maestro': "Filtering a delicate through-ball past your central block. Shooting channels are wide open.",
+      'Gegenpress Coach': "Forcing turnovers near the edge of the area. We are shooting from prime positions!",
+      'Catenaccio Specialist': "A swift break in the box, exploiting space behind the advanced fullbacks."
+    };
+    const defTexts: Record<string, string> = {
+      'Tiki-Taka Maestro': "Closing down the shooting lanes while maintaining a fluid passing outlet.",
+      'Gegenpress Coach': "Smothering the ball carrier. Your striker has zero seconds to turn.",
+      'Catenaccio Specialist': "Low-block shield activated. Sliding tackle initiated in the box."
+    };
+    return {
+      attacker: attTexts[attackerRole] || "Breaching the defensive seam with precise combinations.",
+      defender: defTexts[defenderRole] || "Choking final shooting angles in the penalty box."
+    };
+  }
+  if (round === 4) {
+    if (isGoal) {
+      return {
+        attacker: "Boom! Tactical debate concluded in the net. Our offensive threat index proved superior.",
+        defender: "A defensive lapse. We must adjust our midfield presence immediately."
+      };
+    } else {
+      return {
+        attacker: "A clean shot on target, testing your goalkeeper's metrics!",
+        defender: "Acrobatic save! Your attack lacks the final clinical touch."
+      };
+    }
+  }
+  if (isGoal) {
+    return {
+      attacker: "Sealed the debate in the final minute! The attestation signature is ours.",
+      defender: "Devastating. Our block broke under late computational probability."
+    };
+  } else {
+    return {
+      attacker: "One final heavy press, pushing all players into the final third!",
+      defender: "Disciplined block seals the match. Tactical debate settled under EVM consensus."
+    };
+  }
+};
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<'vault' | 'graph' | 'arena'>('graph');
   const [blockHeight, setBlockHeight] = useState<string>('39,665,672');
@@ -111,6 +346,11 @@ export default function App() {
   const [isSealingBracket, setIsSealingBracket] = useState(false);
   const [bracketTx, setBracketTx] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const pitchCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Live match simulation states
+  const [liveMinute, setLiveMinute] = useState<number>(0);
+  const [liveScore, setLiveScore] = useState<{ user: number; opp: number }>({ user: 0, opp: 0 });
 
   // --- AI Manager Arena (Arena) ---
   const [userAgent, setUserAgent] = useState({
@@ -158,6 +398,21 @@ export default function App() {
     { rank: 4, name: 'Sovereign-Coach', tactic: 'Tiki-Taka Maestro', winRate: '75.0%', ratio: '90/30', score: 1350 },
     { rank: 5, name: 'Ancelotti-AI', tactic: 'Tiki-Taka Maestro', winRate: '72.1%', ratio: '88/34', score: 1280 }
   ]);
+
+  const [simTime, setSimTime] = useState<number>(0);
+  const [currentSimRound, setCurrentSimRound] = useState<number>(0);
+  const [activeHighlight, setActiveHighlight] = useState<{
+    minute: number;
+    attacker: string;
+    defender: string;
+    attackerRole: string;
+    defenderRole: string;
+    isUserAttacking: boolean;
+    isGoal: boolean;
+    phase: 'buildup' | 'progression' | 'shooting' | 'resolution';
+  } | null>(null);
+  const [debateMessages, setDebateMessages] = useState<DebateMessage[]>([]);
+
 
   // Fetch block height from 0G Testnet RPC
   const fetchBlockHeight = async () => {
@@ -590,111 +845,141 @@ export default function App() {
     if (opp) setOpponentAgent(opp);
   };
 
-  const startArenaMatch = () => {
-    setIsFighting(true);
-    setBattleLogs([]);
-    setArenaWinner(null);
-    setArenaScore(null);
-    setTxReceipt(null);
-    setShowReceipt(false);
+  const userAgentRef = useRef(userAgent);
+  const opponentAgentRef = useRef(opponentAgent);
 
-    // Reset match statistics
-    setMatchStats({
-      possession: { user: 50, opp: 50 },
-      shots: { user: 0, opp: 0 },
-      accuracy: { user: 0, opp: 0 },
-      xg: { user: 0.0, opp: 0.0 }
+  useEffect(() => {
+    userAgentRef.current = userAgent;
+    opponentAgentRef.current = opponentAgent;
+  }, [userAgent, opponentAgent]);
+
+  const simulationRef = useRef<{
+    startTime: number;
+    highlights: { roundNum: number; minute: number; isUserAttacking: boolean; isGoal: boolean }[];
+    userScore: number;
+    oppScore: number;
+    triggers: Record<string, boolean>;
+  }>({ startTime: 0, highlights: [], userScore: 0, oppScore: 0, triggers: {} });
+
+  const getCommentary = (attackerName: string, defenderName: string, attackerRole: string, defenderRole: string, isGoal: boolean) => {
+    const tikiAttacks = [
+      "circulates quick passing triangles in the half-space, pulling defenders out of position",
+      "works a crisp combination through the defensive seam with short, high-tempo passes",
+      "filters a delicate through-ball past the central defensive block",
+      "switches the play with a sweeping diagonal ball to the overlapping wingback"
+    ];
+    const pressAttacks = [
+      "triggers a high frontline press, trapping the defender inside their defensive third",
+      "steals the ball near the box and drives directly towards the penalty spot",
+      "forces an immediate turnover with aggressive counter-pressing near the wing",
+      "swarms the central defenders in a high-load passing trap"
+    ];
+    const catenaccioAttacks = [
+      "absorbs pressure deep and launches a swift vertical counter-attack",
+      "intercepts a stray pass and immediately hits a long ball over the top",
+      "charges forward on a rapid break, exploiting space behind the advanced fullbacks",
+      "forces a direct transition from a blocked shot near the edge of the area"
+    ];
+
+    const tikiDefenses = [
+      "stretches their shape to intercept the passing lanes cleanly",
+      "pressures the ball carrier, forcing a backwards pass and slowing the play",
+      "closes down the half-spaces to limit the short passing options"
+    ];
+    const pressDefenses = [
+      "reclaims control with an aggressive tactical block near midfield",
+      "swarms the attacker with three players to stifle the build-up",
+      "stops the advance with an immediate high-press turnover"
+    ];
+    const catenaccioDefenses = [
+      "sits disciplined in a low-block, crowding the central box corridors",
+      "executes a well-timed sliding tackle inside the box to clear the threat",
+      "intercepts the final through-ball with a composed header"
+    ];
+
+    const attActions = attackerRole.includes('Tiki') ? tikiAttacks : (attackerRole.includes('Gegen') ? pressAttacks : catenaccioAttacks);
+    const defActions = defenderRole.includes('Tiki') ? tikiDefenses : (defenderRole.includes('Gegen') ? pressDefenses : catenaccioDefenses);
+
+    const action = attActions[Math.floor(Math.random() * attActions.length)];
+    const defense = defActions[Math.floor(Math.random() * defActions.length)];
+
+    if (isGoal) {
+      const goalFinishes = [
+        "unleashes an unstoppable curling effort directly into the top corner!",
+        "drills a low shot past the diving goalkeeper into the bottom corner!",
+        "slots it home calmly after a slick one-on-one break in the box!",
+        "connects with a powerful header off the cross, leaving the keeper stranded!"
+      ];
+      const finish = goalFinishes[Math.floor(Math.random() * goalFinishes.length)];
+      return `${attackerName} ${action}, breaches the defense, and ${finish}`;
+    } else {
+      const missedFinishes = [
+        "but the shot is saved with an acrobatic dive by the goalkeeper!",
+        `but the defender ${defense} to end the danger.`,
+        "but the shot flies just wide of the post!",
+        "but the final pass is intercepted at the last second!"
+      ];
+      const finish = missedFinishes[Math.floor(Math.random() * missedFinishes.length)];
+      return `${attackerName} ${action}, ${finish}`;
+    }
+  };
+
+  useEffect(() => {
+    if (!isFighting) return;
+
+    const roundDuration = 6000;
+    const totalDuration = roundDuration * 5;
+    const user = userAgentRef.current;
+    const opp = opponentAgentRef.current;
+
+    const highlights = Array.from({ length: 5 }, (_, i) => {
+      const roundNum = i + 1;
+      const minute = roundNum === 1 ? 15 : roundNum === 2 ? 35 : roundNum === 3 ? 55 : roundNum === 4 ? 75 : 90;
+      const isUserAttacking = Math.random() > 0.45;
+      const attPower = isUserAttacking ? user.offense : opp.offense;
+      const defPower = isUserAttacking ? opp.defense : user.defense;
+      const isGoal = Math.random() < (attPower - defPower + 25) / 100 && Math.random() < 0.45;
+      
+      return {
+        roundNum,
+        minute,
+        isUserAttacking,
+        isGoal
+      };
     });
 
-    let round = 1;
-    const tempLogs: MatchLog[] = [];
-    const maxRounds = 4;
+    simulationRef.current = {
+      startTime: Date.now(),
+      highlights,
+      userScore: 0,
+      oppScore: 0,
+      triggers: {}
+    };
 
-    const interval = setInterval(() => {
-      if (round <= maxRounds) {
-        let action = "";
-        let effect = "";
-        let minute = round === 1 ? 15 : round === 2 ? 44 : round === 3 ? 72 : 90;
-        let initiator = round % 2 === 1 ? userAgent.name : opponentAgent.name;
+    let animationFrameId: number;
 
-        // Calculate dynamic dashboard statistics per round
-        setMatchStats(prev => {
-          const userPoss = Math.round(50 + (userAgent.chemistry - opponentAgent.chemistry) * 0.15 + (Math.random() * 8 - 4));
-          const boundedPoss = Math.max(30, Math.min(70, userPoss));
-          
-          const newShotsUser = prev.shots.user + Math.floor(userAgent.offense / 40 + Math.random() * 2);
-          const newShotsOpp = prev.shots.opp + Math.floor(opponentAgent.offense / 45 + Math.random() * 2);
-          
-          const accUser = Math.round(userAgent.chemistry * 0.88 + Math.random() * 8);
-          const accOpp = Math.round(opponentAgent.chemistry * 0.85 + Math.random() * 8);
-          
-          const addXgUser = parseFloat(((userAgent.offense / 100) * (Math.random() * 0.4 + 0.1)).toFixed(2));
-          const addXgOpp = parseFloat(((opponentAgent.offense / 100) * (Math.random() * 0.35 + 0.1)).toFixed(2));
-          
-          return {
-            possession: { user: boundedPoss, opp: 100 - boundedPoss },
-            shots: { user: newShotsUser, opp: newShotsOpp },
-            accuracy: { user: Math.min(98, accUser), opp: Math.min(98, accOpp) },
-            xg: {
-              user: parseFloat((prev.xg.user + addXgUser).toFixed(2)),
-              opp: parseFloat((prev.xg.opp + addXgOpp).toFixed(2))
-            }
-          };
-        });
-
-        if (round === 1) {
-          action = `${initiator} launches a rapid high-intensity offensive transition, testing the low-block spacing.`;
-          effect = `Created 3 counter-pressing scenarios, increasing midfield presence.`;
-        } else if (round === 2) {
-          action = `${initiator} sets up a deep defensive pocket, intercepting and locking down the opponent's wingers.`;
-          effect = `Reduced opponent's offensive threat multiplier.`;
-        } else if (round === 3) {
-          action = `${initiator} adjustments: moves wingbacks higher up the pitch to overwhelm the opponent's backline.`;
-          effect = `Generated goalscoring threat under high computational probability.`;
-        } else if (round === 4) {
-          action = `${initiator} seals tactical debate in the box with a precise strike into the top corner!`;
-          effect = `Attestation signature logged under 0G EVM consensus block height ${blockHeight}.`;
-        }
-
-        tempLogs.push({ round, minute, action, effect, initiator });
-        setBattleLogs([...tempLogs]);
-        round++;
-      } else {
-        clearInterval(interval);
-
-        const userPower = userAgent.offense * 0.4 + userAgent.chemistry * 0.4 + userAgent.defense * 0.2 + Math.random() * 15;
-        const oppPower = opponentAgent.offense * 0.3 + opponentAgent.defense * 0.5 + opponentAgent.chemistry * 0.2 + Math.random() * 15;
-
-        let userGoals = 0;
-        let oppGoals = 0;
-
-        if (userPower > oppPower + 8) {
-          userGoals = Math.floor(Math.random() * 3) + 2;
-          oppGoals = Math.floor(Math.random() * 2);
-        } else if (oppPower > userPower + 8) {
-          userGoals = Math.floor(Math.random() * 2);
-          oppGoals = Math.floor(Math.random() * 3) + 2;
-        } else {
-          userGoals = Math.floor(Math.random() * 2) + 1;
-          oppGoals = userGoals + (Math.random() > 0.5 ? 1 : -1);
-          if (oppGoals < 0) oppGoals = 0;
-        }
-
-        const winName = userGoals > oppGoals ? userAgent.name : (oppGoals > userGoals ? opponentAgent.name : 'Draw');
-        setArenaWinner(winName);
-        setArenaScore(`${userGoals} - ${oppGoals}`);
+    const runSimulation = () => {
+      const elapsed = Date.now() - simulationRef.current.startTime;
+      
+      if (elapsed >= totalDuration) {
         setIsFighting(false);
-
-        if (winName === userAgent.name) {
+        const finalWinner = simulationRef.current.userScore > simulationRef.current.oppScore ? user.name : 
+                            (simulationRef.current.oppScore > simulationRef.current.userScore ? opp.name : 'Draw');
+        
+        setArenaWinner(finalWinner);
+        setArenaScore(`${simulationRef.current.userScore} - ${simulationRef.current.oppScore}`);
+        setLiveMinute(90);
+        
+        if (finalWinner === user.name) {
           confetti({
-            particleCount: 100,
-            spread: 60,
-            origin: { y: 0.8 }
+            particleCount: 150,
+            spread: 80,
+            origin: { y: 0.6 }
           });
 
           setLeaderboard(prev => {
             return prev.map(p => {
-              if (p.name === userAgent.name) {
+              if (p.name === user.name) {
                 const ratio = p.ratio.split('/');
                 const wins = parseInt(ratio[0]) + 1;
                 const losses = parseInt(ratio[1]);
@@ -709,9 +994,313 @@ export default function App() {
             }).sort((a, b) => b.score - a.score);
           });
         }
+        return;
       }
-    }, 1200);
+
+      const roundIndex = Math.floor(elapsed / roundDuration);
+      const currentRoundNum = roundIndex + 1;
+      const timeInRound = elapsed % roundDuration;
+
+      setSimTime(timeInRound);
+      setCurrentSimRound(currentRoundNum);
+
+      const h = highlights[roundIndex];
+      setLiveMinute(h.minute);
+
+      let phase: 'buildup' | 'progression' | 'shooting' | 'resolution' = 'buildup';
+      if (timeInRound > 4500) {
+        phase = 'resolution';
+      } else if (timeInRound > 3000) {
+        phase = 'shooting';
+      } else if (timeInRound > 1500) {
+        phase = 'progression';
+      }
+
+      setActiveHighlight({
+        minute: h.minute,
+        attacker: h.isUserAttacking ? user.name : opp.name,
+        defender: h.isUserAttacking ? opp.name : user.name,
+        attackerRole: h.isUserAttacking ? user.role : opp.role,
+        defenderRole: h.isUserAttacking ? opp.role : user.role,
+        isUserAttacking: h.isUserAttacking,
+        isGoal: h.isGoal,
+        phase
+      });
+
+      const attackerDebateKey = `r${currentRoundNum}_att`;
+      const defenderDebateKey = `r${currentRoundNum}_def`;
+      const outcomeKey = `r${currentRoundNum}_out`;
+
+      if (timeInRound >= 1000 && !simulationRef.current.triggers[attackerDebateKey]) {
+        simulationRef.current.triggers[attackerDebateKey] = true;
+        const debate = getDebateExchange(currentRoundNum, h.isUserAttacking ? user.name : opp.name, h.isUserAttacking ? opp.name : user.name, h.isUserAttacking ? user.role : opp.role, h.isUserAttacking ? opp.role : user.role, h.isGoal);
+        setDebateMessages(prev => [...prev, {
+          id: `att_${currentRoundNum}`,
+          minute: h.minute,
+          managerName: h.isUserAttacking ? user.name : opp.name,
+          role: h.isUserAttacking ? user.role : opp.role,
+          text: debate.attacker,
+          type: h.isUserAttacking ? 'user' : 'opponent'
+        }]);
+      }
+
+      if (timeInRound >= 2800 && !simulationRef.current.triggers[defenderDebateKey]) {
+        simulationRef.current.triggers[defenderDebateKey] = true;
+        const debate = getDebateExchange(currentRoundNum, h.isUserAttacking ? user.name : opp.name, h.isUserAttacking ? opp.name : user.name, h.isUserAttacking ? user.role : opp.role, h.isUserAttacking ? opp.role : user.role, h.isGoal);
+        setDebateMessages(prev => [...prev, {
+          id: `def_${currentRoundNum}`,
+          minute: h.minute,
+          managerName: h.isUserAttacking ? opp.name : user.name,
+          role: h.isUserAttacking ? opp.role : user.role,
+          text: debate.defender,
+          type: h.isUserAttacking ? 'opponent' : 'user'
+        }]);
+      }
+
+      if (timeInRound >= 4500 && !simulationRef.current.triggers[outcomeKey]) {
+        simulationRef.current.triggers[outcomeKey] = true;
+
+        if (h.isGoal) {
+          if (h.isUserAttacking) {
+            simulationRef.current.userScore += 1;
+            setLiveScore(prev => ({ ...prev, user: prev.user + 1 }));
+          } else {
+            simulationRef.current.oppScore += 1;
+            setLiveScore(prev => ({ ...prev, opp: prev.opp + 1 }));
+          }
+        }
+
+        const action = getCommentary(
+          h.isUserAttacking ? user.name : opp.name, 
+          h.isUserAttacking ? opp.name : user.name, 
+          h.isUserAttacking ? user.role : opp.role, 
+          h.isUserAttacking ? opp.role : user.role, 
+          h.isGoal
+        );
+        const effect = h.isGoal ? `⚽ GOAL! Attestation logged at block ${blockHeight}.` : "⚠️ Play resolved, tactical logs sealed.";
+        
+        setBattleLogs(prev => [...prev, {
+          round: currentRoundNum,
+          minute: h.minute,
+          action,
+          effect,
+          initiator: h.isUserAttacking ? user.name : opp.name
+        }]);
+
+        setMatchStats(prev => {
+          const userPoss = Math.round(50 + (user.chemistry - opp.chemistry) * 0.15 + (Math.random() * 8 - 4));
+          const boundedPoss = Math.max(30, Math.min(70, userPoss));
+          const addShotUser = h.isUserAttacking ? 1 + (Math.random() > 0.5 ? 1 : 0) : 0;
+          const addShotOpp = !h.isUserAttacking ? 1 + (Math.random() > 0.5 ? 1 : 0) : 0;
+          const accUser = Math.round(user.chemistry * 0.88 + Math.random() * 6);
+          const accOpp = Math.round(opp.chemistry * 0.85 + Math.random() * 6);
+          const addXgUser = h.isUserAttacking ? (h.isGoal ? 0.75 : 0.2) + Math.random() * 0.25 : 0.0;
+          const addXgOpp = !h.isUserAttacking ? (h.isGoal ? 0.75 : 0.2) + Math.random() * 0.25 : 0.0;
+          
+          return {
+            possession: { user: boundedPoss, opp: 100 - boundedPoss },
+            shots: { user: prev.shots.user + addShotUser, opp: prev.shots.opp + addShotOpp },
+            accuracy: { user: Math.min(98, accUser), opp: Math.min(98, accOpp) },
+            xg: {
+              user: parseFloat((prev.xg.user + addXgUser).toFixed(2)),
+              opp: parseFloat((prev.xg.opp + addXgOpp).toFixed(2))
+            }
+          };
+        });
+      }
+
+      animationFrameId = requestAnimationFrame(runSimulation);
+    };
+
+    animationFrameId = requestAnimationFrame(runSimulation);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [isFighting]);
+
+  useEffect(() => {
+    if (activeTab !== 'arena') return;
+    const canvas = pitchCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animFrameId: number;
+
+    const render = () => {
+      const w = canvas.width;
+      const h = canvas.height;
+      drawPitch(ctx, w, h);
+
+      const user = userAgentRef.current;
+      const opp = opponentAgentRef.current;
+
+      if (isFighting || battleLogs.length > 0) {
+        const isUserAtt = activeHighlight ? activeHighlight.isUserAttacking : true;
+        const phase = activeHighlight ? activeHighlight.phase : 'buildup';
+        const isGoal = activeHighlight ? activeHighlight.isGoal : false;
+
+        const userPositions = getPlayerPositions('user', user.role, phase, isUserAtt, w, h);
+        const oppPositions = getPlayerPositions('opp', opp.role, phase, isUserAtt, w, h);
+
+        if (!isUserAtt && opp.role.includes('Catenaccio') && (phase === 'buildup' || phase === 'progression')) {
+          ctx.save();
+          ctx.fillStyle = 'rgba(168, 85, 247, 0.04)';
+          ctx.strokeStyle = 'rgba(168, 85, 247, 0.15)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(w * 0.78, h / 2, 70, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = 'rgba(168, 85, 247, 0.6)';
+          ctx.font = '8px monospace';
+          ctx.fillText("MOURINHO LOW BLOCK", w * 0.78 - 45, h / 2 - 80);
+          ctx.restore();
+        } else if (isUserAtt && user.role.includes('Catenaccio') && (phase === 'buildup' || phase === 'progression')) {
+          ctx.save();
+          ctx.fillStyle = 'rgba(6, 182, 212, 0.04)';
+          ctx.strokeStyle = 'rgba(6, 182, 212, 0.15)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(w * 0.22, h / 2, 70, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = 'rgba(6, 182, 212, 0.6)';
+          ctx.font = '8px monospace';
+          ctx.fillText("SOVEREIGN LOW BLOCK", w * 0.22 - 45, h / 2 - 80);
+          ctx.restore();
+        }
+
+        userPositions.forEach((p, idx) => {
+          ctx.save();
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = '#00f0ff';
+          ctx.fillStyle = idx === 0 ? '#ffdd55' : '#00f0ff';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.restore();
+        });
+
+        oppPositions.forEach((p, idx) => {
+          ctx.save();
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = '#a855f7';
+          ctx.fillStyle = idx === 0 ? '#ffdd55' : '#a855f7';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.restore();
+        });
+
+        let ballPos = { x: w / 2, y: h / 2 };
+        if (activeHighlight) {
+          const t = Math.max(0, Math.min(1, (simTime % 1500) / 1500));
+          if (phase === 'buildup') {
+            const startP = isUserAtt ? userPositions[2] : oppPositions[3];
+            const endP = isUserAtt ? userPositions[6] : oppPositions[7];
+            ballPos = interpolate(startP, endP, t);
+          } else if (phase === 'progression') {
+            const startP = isUserAtt ? userPositions[6] : oppPositions[7];
+            const endP = isUserAtt ? userPositions[9] : oppPositions[9];
+            ballPos = interpolate(startP, endP, t);
+          } else if (phase === 'shooting') {
+            const startP = isUserAtt ? userPositions[9] : oppPositions[9];
+            const endGoal = isUserAtt ? { x: w - 20, y: h / 2 } : { x: 20, y: h / 2 };
+            ballPos = interpolate(startP, endGoal, t);
+          } else {
+            const goalSpot = isUserAtt ? { x: w - 20, y: h / 2 } : { x: 20, y: h / 2 };
+            if (isGoal) {
+              const backNet = isUserAtt ? { x: w - 12, y: h / 2 + 5 } : { x: 12, y: h / 2 + 5 };
+              ballPos = interpolate(goalSpot, backNet, t);
+            } else {
+              const bounce = isUserAtt ? { x: w - 50, y: h / 2 - 40 } : { x: 50, y: h / 2 - 40 };
+              ballPos = interpolate(goalSpot, bounce, t);
+            }
+          }
+        }
+
+        ctx.save();
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#ffff00';
+        ctx.fillStyle = '#ffff00';
+        ctx.beginPath();
+        ctx.arc(ballPos.x, ballPos.y, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.restore();
+
+        if (phase === 'resolution' && activeHighlight) {
+          ctx.save();
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+          ctx.fillRect(w / 2 - 70, h / 2 - 20, 140, 32);
+          ctx.strokeStyle = activeHighlight.isGoal ? '#10b981' : '#f59e0b';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(w / 2 - 70, h / 2 - 20, 140, 32);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 11px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          const alertText = activeHighlight.isGoal ? '⚽ GOAL!' : '🧤 SHOT BLOCKED';
+          ctx.fillText(alertText, w / 2, h / 2 - 4);
+          ctx.restore();
+        }
+      } else {
+        const userPositions = getPlayerPositions('user', user.role, 'buildup', true, w, h);
+        const oppPositions = getPlayerPositions('opp', opp.role, 'buildup', true, w, h);
+
+        userPositions.forEach((p, idx) => {
+          ctx.fillStyle = idx === 0 ? '#ffdd55' : '#00f0ff';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        oppPositions.forEach((p, idx) => {
+          ctx.fillStyle = idx === 0 ? '#ffdd55' : '#a855f7';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        ctx.fillStyle = '#ffff00';
+        ctx.beginPath();
+        ctx.arc(w / 2, h / 2, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      animFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+    return () => cancelAnimationFrame(animFrameId);
+  }, [activeTab, isFighting, activeHighlight, simTime, battleLogs]);
+
+  const startArenaMatch = () => {
+    setIsFighting(true);
+    setBattleLogs([]);
+    setArenaWinner(null);
+    setArenaScore(null);
+    setTxReceipt(null);
+    setShowReceipt(false);
+    setLiveMinute(0);
+    setLiveScore({ user: 0, opp: 0 });
+    setDebateMessages([]);
+
+    setMatchStats({
+      possession: { user: 50, opp: 50 },
+      shots: { user: 0, opp: 0 },
+      accuracy: { user: 0, opp: 0 },
+      xg: { user: 0.0, opp: 0.0 }
+    });
   };
+
 
   const handleRecordArenaMatch = () => {
     if (!arenaWinner || !arenaScore) return;
@@ -1177,10 +1766,11 @@ export default function App() {
               </div>
 
               {/* Tournament Panels */}
-              <div className="p-6 grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+              <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 
-                {/* Manager configurator */}
-                <div className="space-y-6">
+                {/* Left Panel: Configurations & Leaderboard */}
+                <div className="col-span-1 lg:col-span-4 space-y-6">
+                  {/* Configure Your AI Manager */}
                   <div className="glass rounded-xl p-5 space-y-4 glow-card">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center">
                       <User className="w-4 h-4 text-cyan-400 mr-1.5" />
@@ -1277,7 +1867,7 @@ export default function App() {
                       disabled={isFighting}
                       className="w-full flex items-center justify-center space-x-2 py-2 px-4 bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-400 hover:to-indigo-400 text-white font-bold text-sm rounded-lg transition"
                     >
-                      <Play className="w-4 h-4" />
+                      <Play className="w-4 h-4 animate-pulse" />
                       <span>{isFighting ? 'Debating & Simulating...' : 'Matchmake and Start Match'}</span>
                     </button>
                   </div>
@@ -1303,20 +1893,118 @@ export default function App() {
                       <span className="text-xs px-2.5 py-1 bg-purple-500/10 border border-purple-500/20 text-purple-400 rounded-full font-mono font-bold">LVL 75</span>
                     </div>
                   </div>
+
+                  {/* Leaderboard */}
+                  <div className="glass rounded-xl p-5 glow-card">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center mb-3">
+                      Arena Leaderboard
+                    </h3>
+                    <div className="space-y-2">
+                      {leaderboard.map((team) => (
+                        <div 
+                          key={team.rank} 
+                          className={`flex justify-between items-center text-xs py-2 px-3 rounded ${
+                            team.name === userAgent.name 
+                              ? 'bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-bold' 
+                              : 'bg-slate-900/40 border border-slate-900/60 text-slate-300'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-2">
+                            <span className="font-bold text-slate-500 w-4">{team.rank}.</span>
+                            <div>
+                              <span className="font-semibold text-white block">{team.name}</span>
+                              <span className="text-[9px] text-slate-500">{team.tactic}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-6 font-mono text-[11px]">
+                            <div>
+                              <span className="text-[8px] text-slate-500 block text-right">Win rate</span>
+                              <span>{team.winRate}</span>
+                            </div>
+                            <div className="w-16">
+                              <span className="text-[8px] text-slate-500 block text-right">W/L ratio</span>
+                              <span className="block text-right">{team.ratio}</span>
+                            </div>
+                            <div className="w-12">
+                              <span className="text-[8px] text-slate-500 block text-right">XP Score</span>
+                              <span className="block text-right font-bold text-white">{team.score}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Match logs, stats dashboard, and receipts */}
-                <div className="space-y-6">
-                  
-                  {/* Dynamic Match Stats Dashboard */}
-                  {(isFighting || battleLogs.length > 0) && (
-                    <div className="glass rounded-xl p-5 glow-card animate-fade-in-up space-y-3.5 bg-[#101726]/30">
+                {/* Center & Right Panel: Pitch, Scoreboard, Debates, Stats & Receipts */}
+                <div className="col-span-1 lg:col-span-8 space-y-6">
+                  {/* Scoreboard HUD */}
+                  <div className="glass rounded-xl p-4 bg-[#101726]/40 border border-slate-800 glow-card flex justify-between items-center text-center">
+                    <div className="w-1/3 flex flex-col items-center">
+                      <div className="w-10 h-10 rounded-full bg-cyan-500/10 border border-cyan-400 flex items-center justify-center font-bold text-cyan-400 text-sm shadow-md shadow-cyan-500/20">
+                        {userAgent.name.substring(0, 2).toUpperCase()}
+                      </div>
+                      <span className="font-bold text-white text-xs mt-1.5 block truncate max-w-full">{userAgent.name}</span>
+                      <span className="text-[9px] text-slate-500 font-medium">{userAgent.role}</span>
+                    </div>
+                    
+                    <div className="flex-1 flex flex-col items-center justify-center">
+                      <span className="text-[9px] text-slate-500 uppercase tracking-widest font-bold font-mono">
+                        {isFighting ? `Highlight ${currentSimRound} of 5` : 'AI Arena Status'}
+                      </span>
+                      <div className="text-3xl font-mono font-extrabold text-white mt-1 select-none flex items-center space-x-4">
+                        <span className="glow-text-cyan">{liveScore.user}</span>
+                        <span className="text-slate-700 text-2xl">:</span>
+                        <span className="glow-text-purple">{liveScore.opp}</span>
+                      </div>
+                      <div className="mt-1 flex items-center space-x-1.5">
+                        <span className={`w-1.5 h-1.5 rounded-full ${isFighting ? 'bg-red-500 animate-ping' : 'bg-emerald-500'}`}></span>
+                        <span className="text-[9px] font-mono font-bold text-slate-400 uppercase">
+                          {isFighting ? `${liveMinute}' Min - Match Live` : arenaWinner ? 'Match Concluded' : 'Enclave Ready'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="w-1/3 flex flex-col items-center">
+                      <div className="w-10 h-10 rounded-full bg-purple-500/10 border border-purple-400 flex items-center justify-center font-bold text-purple-400 text-sm shadow-md shadow-purple-500/20">
+                        {opponentAgent.name.substring(0, 2).toUpperCase()}
+                      </div>
+                      <span className="font-bold text-white text-xs mt-1.5 block truncate max-w-full">{opponentAgent.name}</span>
+                      <span className="text-[9px] text-slate-500 font-medium">{opponentAgent.role}</span>
+                    </div>
+                  </div>
+
+                  {/* 2D Whiteboard Pitch */}
+                  <div className="border border-slate-800 rounded-xl bg-[#07090F] p-2 relative flex flex-col overflow-hidden glow-card">
+                    <div className="flex justify-between items-center px-4 py-2 border-b border-slate-900 bg-slate-950/40 text-[9px] font-mono tracking-wider text-slate-400">
+                      <span className="text-cyan-400 flex items-center font-bold">
+                        <Activity className="w-3.5 h-3.5 mr-1.5 animate-pulse text-cyan-400" />
+                        0G DeAI Playmaker Pitch Simulation
+                      </span>
+                      <span className="text-slate-500 font-bold uppercase">
+                        Active Highlight Phase: {isFighting && activeHighlight ? activeHighlight.phase : 'Standby'}
+                      </span>
+                    </div>
+                    <div className="relative w-full h-[320px] bg-[#090d16]">
+                      <canvas
+                        ref={pitchCanvasRef}
+                        width={600}
+                        height={320}
+                        className="w-full h-full block"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Dual Grid: Stats and Live Debates */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Live Match Stats Dashboard */}
+                    <div className="glass rounded-xl p-5 glow-card flex flex-col justify-between h-[300px] bg-[#101726]/30">
                       <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center">
                         <Activity className="w-4 h-4 text-cyan-400 mr-1.5" />
                         Live Match Stats Dashboard
                       </h3>
                       
-                      <div className="space-y-3">
+                      <div className="space-y-3.5 flex-1 flex flex-col justify-center pt-2">
                         {/* Possession */}
                         <div>
                           <div className="flex justify-between text-[10px] font-bold text-slate-400 mb-1">
@@ -1374,16 +2062,46 @@ export default function App() {
                         </div>
                       </div>
                     </div>
-                  )}
 
-                  {/* Logs Console */}
+                    {/* Live Manager Debate Banter */}
+                    <div className="glass rounded-xl p-5 glow-card flex flex-col h-[300px]">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center mb-3">
+                        <Send className="w-4 h-4 text-cyan-400 mr-1.5" />
+                        Manager Live Debate Banter
+                      </h3>
+                      <div className="flex-1 bg-slate-950/70 border border-slate-900 rounded-lg p-3 overflow-y-auto space-y-3 font-sans text-xs">
+                        {debateMessages.length > 0 ? (
+                          debateMessages.map((msg) => (
+                            <div key={msg.id} className={`flex flex-col ${msg.type === 'user' ? 'items-start' : 'items-end'} animate-fade-in-up`}>
+                              <span className={`text-[9px] font-bold font-mono mb-0.5 ${msg.type === 'user' ? 'text-cyan-400' : 'text-purple-400'}`}>
+                                {msg.managerName} ({msg.role})
+                              </span>
+                              <div className={`p-2 py-1.5 rounded-lg max-w-[85%] leading-relaxed border text-[11px] ${
+                                msg.type === 'user'
+                                  ? 'bg-cyan-950/20 border-cyan-800/30 text-slate-200 rounded-tl-none'
+                                  : 'bg-purple-950/20 border-purple-800/30 text-slate-200 rounded-tr-none'
+                              }`}>
+                                {msg.text}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="h-full flex items-center justify-center text-slate-500 italic text-center py-10">
+                            {isFighting ? 'Awaiting coach tactical debate...' : 'Match has not started. Debates will appear here.'}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tactical match engine console */}
                   <div className="glass rounded-xl p-5 flex flex-col glow-card">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center mb-4">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center mb-3">
                       <Terminal className="w-4 h-4 text-cyan-400 mr-1.5" />
                       Tactical match engine console
                     </h3>
 
-                    <div className="flex-1 bg-slate-950/70 border border-slate-900 rounded-lg p-4 font-mono text-xs text-slate-300 min-h-[180px] max-h-[280px] overflow-y-auto space-y-3">
+                    <div className="flex-1 bg-slate-950/70 border border-slate-900 rounded-lg p-4 font-mono text-xs text-slate-300 min-h-[160px] max-h-[220px] overflow-y-auto space-y-3">
                       {battleLogs.length > 0 ? (
                         battleLogs.map((log, index) => (
                           <div key={index} className="space-y-1 py-1 border-b border-slate-900/60 last:border-b-0 animate-fade-in-up">
@@ -1397,8 +2115,8 @@ export default function App() {
                           </div>
                         ))
                       ) : (
-                        <div className="h-full flex items-center justify-center text-slate-500 py-12">
-                          {isFighting ? 'Simulating player movements...' : 'Match has not started. Select an opponent and click Matchmake.'}
+                        <div className="h-full flex items-center justify-center text-slate-500 py-10">
+                          {isFighting ? 'Simulating playmaker transitions...' : 'Match has not started. Select opponent and click Matchmake.'}
                         </div>
                       )}
 
@@ -1454,48 +2172,6 @@ export default function App() {
                       </div>
                     </div>
                   )}
-
-                  {/* Leaderboard */}
-                  <div className="glass rounded-xl p-5 glow-card">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center mb-3">
-                      Arena Leaderboard
-                    </h3>
-                    <div className="space-y-2">
-                      {leaderboard.map((team) => (
-                        <div 
-                          key={team.rank} 
-                          className={`flex justify-between items-center text-xs py-2 px-3 rounded ${
-                            team.name === userAgent.name 
-                              ? 'bg-cyan-500/10 border border-cyan-500/20 text-cyan-400' 
-                              : 'bg-slate-900/40 border border-slate-900/60 text-slate-300'
-                          }`}
-                        >
-                          <div className="flex items-center space-x-2">
-                            <span className="font-bold text-slate-500 w-4">{team.rank}.</span>
-                            <div>
-                              <span className="font-semibold text-white block">{team.name}</span>
-                              <span className="text-[9px] text-slate-500">{team.tactic}</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-6 font-mono text-[11px]">
-                            <div>
-                              <span className="text-[8px] text-slate-500 block text-right">Win rate</span>
-                              <span>{team.winRate}</span>
-                            </div>
-                            <div className="w-16">
-                              <span className="text-[8px] text-slate-500 block text-right">W/L ratio</span>
-                              <span className="block text-right">{team.ratio}</span>
-                            </div>
-                            <div className="w-12">
-                              <span className="text-[8px] text-slate-500 block text-right">XP Score</span>
-                              <span className="block text-right font-bold text-white">{team.score}</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
                 </div>
 
               </div>
