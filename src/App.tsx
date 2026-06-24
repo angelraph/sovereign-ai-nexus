@@ -802,7 +802,7 @@ export default function App() {
         </aside>
 
         {/* Main Panel Content */}
-        <main className="flex-1 bg-[#0F1420]/30 overflow-hidden flex flex-col">
+        <main className="flex-1 bg-[#0a0f1d] overflow-hidden flex flex-col">
           
           {/* TAB 1: BRACKET PREDICTOR */}
           {activeTab === 'graph' && (
@@ -833,11 +833,11 @@ export default function App() {
                 )}
 
                 {/* Bracket Layout columns */}
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 bg-[#07090F]/40 border border-slate-800/60 rounded-xl p-6 relative overflow-x-auto min-w-[950px]">
+                <div className="grid grid-cols-4 gap-6 bg-[#0a0e1a]/95 border border-slate-800/80 rounded-2xl p-6 relative overflow-x-auto min-w-[1000px] h-[580px] shadow-2xl">
                   
                   {/* QUARTERFINALS */}
-                  <div className="flex flex-col justify-between space-y-6">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider text-center border-b border-slate-850 pb-2">Quarterfinals</h3>
+                  <div className="h-full flex flex-col justify-between py-2">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider text-center border-b border-slate-800/60 pb-2">Quarterfinals</h3>
                     
                     {/* Match 1 */}
                     <div className={`bracket-match ${qfWinner1 ? 'glow-border-cyan' : ''}`}>
@@ -847,14 +847,14 @@ export default function App() {
                         className={`w-full text-left text-xs py-1.5 px-2 rounded mb-1 flex justify-between items-center transition ${qfWinner1 === 'France' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 font-bold' : 'hover:bg-slate-800/40 text-slate-300'}`}
                       >
                         <span>🇫🇷 France</span>
-                        {qfWinner1 === 'France' && <CheckCircle className="w-3 h-3 text-cyan-400" />}
+                        {qfWinner1 === 'France' && <CheckCircle className="w-3.5 h-3.5 text-cyan-400" />}
                       </button>
                       <button 
                         onClick={() => { setQfWinner1('Spain'); if (sfWinner1 === 'France' || sfWinner1 === 'Spain') setSfWinner1(null); }}
                         className={`w-full text-left text-xs py-1.5 px-2 rounded flex justify-between items-center transition ${qfWinner1 === 'Spain' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 font-bold' : 'hover:bg-slate-800/40 text-slate-300'}`}
                       >
                         <span>🇪🇸 Spain</span>
-                        {qfWinner1 === 'Spain' && <CheckCircle className="w-3 h-3 text-cyan-400" />}
+                        {qfWinner1 === 'Spain' && <CheckCircle className="w-3.5 h-3.5 text-cyan-400" />}
                       </button>
                     </div>
 
@@ -866,14 +866,14 @@ export default function App() {
                         className={`w-full text-left text-xs py-1.5 px-2 rounded mb-1 flex justify-between items-center transition ${qfWinner2 === 'Germany' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 font-bold' : 'hover:bg-slate-800/40 text-slate-300'}`}
                       >
                         <span>🇩🇪 Germany</span>
-                        {qfWinner2 === 'Germany' && <CheckCircle className="w-3 h-3 text-cyan-400" />}
+                        {qfWinner2 === 'Germany' && <CheckCircle className="w-3.5 h-3.5 text-cyan-400" />}
                       </button>
                       <button 
                         onClick={() => { setQfWinner2('England'); if (sfWinner1 === 'Germany' || sfWinner1 === 'England') setSfWinner1(null); }}
                         className={`w-full text-left text-xs py-1.5 px-2 rounded flex justify-between items-center transition ${qfWinner2 === 'England' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 font-bold' : 'hover:bg-slate-800/40 text-slate-300'}`}
                       >
                         <span>🏴󠁧󠁢󠁥󠁮󠁧󠁿 England</span>
-                        {qfWinner2 === 'England' && <CheckCircle className="w-3 h-3 text-cyan-400" />}
+                        {qfWinner2 === 'England' && <CheckCircle className="w-3.5 h-3.5 text-cyan-400" />}
                       </button>
                     </div>
 
@@ -885,14 +885,14 @@ export default function App() {
                         className={`w-full text-left text-xs py-1.5 px-2 rounded mb-1 flex justify-between items-center transition ${qfWinner3 === 'Argentina' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 font-bold' : 'hover:bg-slate-800/40 text-slate-300'}`}
                       >
                         <span>🇦🇷 Argentina</span>
-                        {qfWinner3 === 'Argentina' && <CheckCircle className="w-3 h-3 text-cyan-400" />}
+                        {qfWinner3 === 'Argentina' && <CheckCircle className="w-3.5 h-3.5 text-cyan-400" />}
                       </button>
                       <button 
                         onClick={() => { setQfWinner3('Netherlands'); if (sfWinner2 === 'Argentina' || sfWinner2 === 'Netherlands') setSfWinner2(null); }}
                         className={`w-full text-left text-xs py-1.5 px-2 rounded flex justify-between items-center transition ${qfWinner3 === 'Netherlands' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 font-bold' : 'hover:bg-slate-800/40 text-slate-300'}`}
                       >
                         <span>🇳🇱 Netherlands</span>
-                        {qfWinner3 === 'Netherlands' && <CheckCircle className="w-3 h-3 text-cyan-400" />}
+                        {qfWinner3 === 'Netherlands' && <CheckCircle className="w-3.5 h-3.5 text-cyan-400" />}
                       </button>
                     </div>
 
@@ -904,22 +904,22 @@ export default function App() {
                         className={`w-full text-left text-xs py-1.5 px-2 rounded mb-1 flex justify-between items-center transition ${qfWinner4 === 'Brazil' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 font-bold' : 'hover:bg-slate-800/40 text-slate-300'}`}
                       >
                         <span>🇧🇷 Brazil</span>
-                        {qfWinner4 === 'Brazil' && <CheckCircle className="w-3 h-3 text-cyan-400" />}
+                        {qfWinner4 === 'Brazil' && <CheckCircle className="w-3.5 h-3.5 text-cyan-400" />}
                       </button>
                       <button 
                         onClick={() => { setQfWinner4('Portugal'); if (sfWinner2 === 'Brazil' || sfWinner2 === 'Portugal') setSfWinner2(null); }}
                         className={`w-full text-left text-xs py-1.5 px-2 rounded flex justify-between items-center transition ${qfWinner4 === 'Portugal' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 font-bold' : 'hover:bg-slate-800/40 text-slate-300'}`}
                       >
                         <span>🇵🇹 Portugal</span>
-                        {qfWinner4 === 'Portugal' && <CheckCircle className="w-3 h-3 text-cyan-400" />}
+                        {qfWinner4 === 'Portugal' && <CheckCircle className="w-3.5 h-3.5 text-cyan-400" />}
                       </button>
                     </div>
 
                   </div>
 
                   {/* SEMIFINALS */}
-                  <div className="flex flex-col justify-around py-12">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider text-center border-b border-slate-850 pb-2">Semifinals</h3>
+                  <div className="h-full flex flex-col justify-around py-2">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider text-center border-b border-slate-800/60 pb-2">Semifinals</h3>
                     
                     {/* Semi 1 */}
                     <div className={`bracket-match ${sfWinner1 ? 'glow-border-cyan' : ''}`}>
@@ -931,14 +931,14 @@ export default function App() {
                             className={`w-full text-left text-xs py-1.5 px-2 rounded mb-1 flex justify-between items-center transition ${sfWinner1 === qfWinner1 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 font-bold' : 'hover:bg-slate-800/40 text-slate-300'}`}
                           >
                             <span>{qfWinner1}</span>
-                            {sfWinner1 === qfWinner1 && <CheckCircle className="w-3 h-3 text-cyan-400" />}
+                            {sfWinner1 === qfWinner1 && <CheckCircle className="w-3.5 h-3.5 text-cyan-400" />}
                           </button>
                           <button 
                             onClick={() => { setSfWinner1(qfWinner2); if (champion === qfWinner1 || champion === qfWinner2) setChampion(null); }}
                             className={`w-full text-left text-xs py-1.5 px-2 rounded flex justify-between items-center transition ${sfWinner1 === qfWinner2 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 font-bold' : 'hover:bg-slate-800/40 text-slate-300'}`}
                           >
                             <span>{qfWinner2}</span>
-                            {sfWinner1 === qfWinner2 && <CheckCircle className="w-3 h-3 text-cyan-400" />}
+                            {sfWinner1 === qfWinner2 && <CheckCircle className="w-3.5 h-3.5 text-cyan-400" />}
                           </button>
                         </>
                       ) : (
@@ -956,14 +956,14 @@ export default function App() {
                             className={`w-full text-left text-xs py-1.5 px-2 rounded mb-1 flex justify-between items-center transition ${sfWinner2 === qfWinner3 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 font-bold' : 'hover:bg-slate-800/40 text-slate-300'}`}
                           >
                             <span>{qfWinner3}</span>
-                            {sfWinner2 === qfWinner3 && <CheckCircle className="w-3 h-3 text-cyan-400" />}
+                            {sfWinner2 === qfWinner3 && <CheckCircle className="w-3.5 h-3.5 text-cyan-400" />}
                           </button>
                           <button 
                             onClick={() => { setSfWinner2(qfWinner4); if (champion === qfWinner3 || champion === qfWinner4) setChampion(null); }}
                             className={`w-full text-left text-xs py-1.5 px-2 rounded flex justify-between items-center transition ${sfWinner2 === qfWinner4 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 font-bold' : 'hover:bg-slate-800/40 text-slate-300'}`}
                           >
                             <span>{qfWinner4}</span>
-                            {sfWinner2 === qfWinner4 && <CheckCircle className="w-3 h-3 text-cyan-400" />}
+                            {sfWinner2 === qfWinner4 && <CheckCircle className="w-3.5 h-3.5 text-cyan-400" />}
                           </button>
                         </>
                       ) : (
@@ -974,8 +974,8 @@ export default function App() {
                   </div>
 
                   {/* FINALS */}
-                  <div className="flex flex-col justify-center py-24">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider text-center border-b border-slate-850 pb-2">Final</h3>
+                  <div className="h-full flex flex-col justify-center py-2">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider text-center border-b border-slate-800/60 pb-2">Final</h3>
                     
                     <div className={`bracket-match mt-4 ${champion ? 'glow-border-purple' : ''}`}>
                       <div className="text-[10px] text-slate-500 font-bold uppercase mb-1">Grand Final</div>
@@ -989,7 +989,7 @@ export default function App() {
                             className={`w-full text-left text-xs py-1.5 px-2 rounded mb-1 flex justify-between items-center transition ${champion === sfWinner1 ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40 font-bold' : 'hover:bg-slate-800/40 text-slate-300'}`}
                           >
                             <span>{sfWinner1}</span>
-                            {champion === sfWinner1 && <CheckCircle className="w-3 h-3 text-purple-400" />}
+                            {champion === sfWinner1 && <CheckCircle className="w-3.5 h-3.5 text-purple-400" />}
                           </button>
                           <button 
                             onClick={() => {
@@ -999,7 +999,7 @@ export default function App() {
                             className={`w-full text-left text-xs py-1.5 px-2 rounded flex justify-between items-center transition ${champion === sfWinner2 ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40 font-bold' : 'hover:bg-slate-800/40 text-slate-300'}`}
                           >
                             <span>{sfWinner2}</span>
-                            {champion === sfWinner2 && <CheckCircle className="w-3 h-3 text-purple-400" />}
+                            {champion === sfWinner2 && <CheckCircle className="w-3.5 h-3.5 text-purple-400" />}
                           </button>
                         </>
                       ) : (
@@ -1009,7 +1009,7 @@ export default function App() {
                   </div>
 
                   {/* CHAMPION */}
-                  <div className="flex flex-col items-center justify-center border-l border-slate-800/65 pl-4">
+                  <div className="h-full flex flex-col justify-center items-center border-l border-slate-800/60 pl-6 py-2">
                     {champion ? (
                       <div className="text-center space-y-4 trophy-container p-6 rounded-2xl border border-yellow-500/20 bg-slate-950/80 animate-fade-in-up">
                         <img 
