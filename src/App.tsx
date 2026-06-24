@@ -489,42 +489,157 @@ export default function App() {
       let aiText = "";
       const textLower = userMsg.text.toLowerCase();
 
-      // Mock teams database
-      const teams = [
-        { name: 'England', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stats: 'offense 85%, defense 80%' },
-        { name: 'Ghana', flag: '🇬🇭', stats: 'offense 75%, defense 72%' },
-        { name: 'France', flag: '🇫🇷', stats: 'offense 90%, defense 85%' },
-        { name: 'Spain', flag: '🇪🇸', stats: 'offense 88%, defense 82%' },
-        { name: 'Germany', flag: '🇩🇪', stats: 'offense 84%, defense 78%' },
-        { name: 'Argentina', flag: '🇦🇷', stats: 'offense 89%, defense 86%' },
-        { name: 'Brazil', flag: '🇧🇷', stats: 'offense 92%, defense 84%' },
-        { name: 'Portugal', flag: '🇵🇹', stats: 'offense 86%, defense 80%' },
-        { name: 'Netherlands', flag: '🇳🇱', stats: 'offense 83%, defense 81%' }
+      // Flags dictionary for rich responses
+      const flagMap: { [key: string]: string } = {
+        'Portugal': '🇵🇹', 'Uzbekistan': '🇺🇿', 'England': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'Ghana': '🇬🇭',
+        'Croatia': '🇭🇷', 'Panama': '🇵🇦', 'Colombia': '🇨🇴', 'DR Congo': '🇨🇩',
+        'Argentina': '🇦🇷', 'Austria': '🇦🇹', 'France': '🇫🇷', 'Iraq': '🇮🇶',
+        'Norway': '🇳🇴', 'Senegal': '🇸🇳', 'Algeria': '🇩🇿', 'Jordan': '🇯🇴',
+        'Spain': '🇪🇸', 'Saudi Arabia': '🇸🇦', 'Belgium': '🇧🇪', 'Iran': '🇮🇷',
+        'Uruguay': '🇺🇾', 'Cape Verde': '🇨🇻', 'Egypt': '🇪🇬', 'New Zealand': '🇳🇿',
+        'Netherlands': '🇳🇱', 'Sweden': '🇸🇪', 'Germany': '🇩🇪', 'Ivory Coast': '🇨🇮',
+        'Ecuador': '🇪🇨', 'Curaçao': '🇨🇼', 'Japan': '🇯🇵', 'Tunisia': '🇹🇳',
+        'United States': '🇺🇸', 'USA': '🇺🇸', 'Australia': '🇦🇺', 'Morocco': '🇲🇦',
+        'Scotland': '🏴󠁧󠁢󠁳󠁣󠁴󠁿', 'Türkiye': '🇹🇷', 'Turkey': '🇹🇷', 'South Africa': '🇿🇦',
+        'South Korea': '🇰🇷', 'Czechia': '🇨🇿', 'Bosnia-Herzegovina': '🇧🇦',
+        'Bosnia and Herzegovina': '🇧🇦', 'Qatar': '🇶🇦', 'Haiti': '🇭🇹', 'Brazil': '🇧🇷'
+      };
+
+      const getFlag = (team: string) => flagMap[team] || '⚽';
+
+      // Real-World 2026 FIFA World Cup Match Results (June 11 - June 23)
+      const realMatches = [
+        { date: 'June 23', home: 'Portugal', away: 'Uzbekistan', score: '5 - 0', detail: 'Portugal dominated from the start, with key offensive transitions bypassing Uzbekistan\'s mid-block.' },
+        { date: 'June 23', home: 'England', away: 'Ghana', score: '0 - 0', detail: 'Played at Boston Stadium (Foxborough). England dominated 58% possession, but Ghana\'s compact 5-4-1 low-block held firm. Nico O\'Reilly hit the crossbar late in the second half.' },
+        { date: 'June 23', home: 'Croatia', away: 'Panama', score: '1 - 0', detail: 'Croatia secured three points with a clinical set-piece header.' },
+        { date: 'June 23', home: 'Colombia', away: 'DR Congo', score: '1 - 0', detail: 'Colombia\'s wing play created the breakthrough in the 72nd minute.' },
+        { date: 'June 22', home: 'Argentina', away: 'Austria', score: '2 - 0', detail: 'Argentina clinched qualification to the Round of 32. Messi-GPT tactical metrics showed high chemistry.' },
+        { date: 'June 22', home: 'France', away: 'Iraq', score: '3 - 0', detail: 'France\'s high counter-press completely shut down Iraq\'s build-up play.' },
+        { date: 'June 22', home: 'Norway', away: 'Senegal', score: '3 - 2', detail: 'A high-intensity, back-and-forth thriller where Norway\'s physical strikers edged the victory.' },
+        { date: 'June 22', home: 'Algeria', away: 'Jordan', score: '2 - 1', detail: 'Algeria controlled the midfield tempo, securing the win despite a late Jordan press.' },
+        { date: 'June 21', home: 'Spain', away: 'Saudi Arabia', score: '4 - 0', detail: 'Spain\'s classic Tiki-Taka control yielded a masterclass performance in possession.' },
+        { date: 'June 21', home: 'Belgium', away: 'Iran', score: '0 - 0', detail: 'Iran\'s low-block defensive discipline frustrated Belgium\'s attack.' },
+        { date: 'June 21', home: 'Uruguay', away: 'Cape Verde', score: '2 - 2', detail: 'A tactical stalemate where Cape Verde twice caught Uruguay on the counter.' },
+        { date: 'June 21', home: 'Egypt', away: 'New Zealand', score: '3 - 1', detail: 'Egypt\'s clinical finishing from wide areas secured a comfortable victory.' },
+        { date: 'June 20', home: 'Netherlands', away: 'Sweden', score: '5 - 1', detail: 'Netherlands executed a lethal transition attack, exposing gaps in Sweden\'s high line.' },
+        { date: 'June 20', home: 'Germany', away: 'Ivory Coast', score: '2 - 1', detail: 'Germany secured group progression with solid midfield control.' },
+        { date: 'June 20', home: 'Ecuador', away: 'Curaçao', score: '0 - 0', detail: 'A physical duel that ended in a stalemate with both teams lacking clinical finishing.' },
+        { date: 'June 20', home: 'Japan', away: 'Tunisia', score: '4 - 0', detail: 'Japan\'s fluid passing patterns disrupted Tunisia\'s defensive shape repeatedly.' },
+        { date: 'June 19', home: 'United States', away: 'Australia', score: '2 - 0', detail: 'USA clinched progression to the Round of 32 with high pressing and rapid wing attacks.' },
+        { date: 'June 19', home: 'Morocco', away: 'Scotland', score: '1 - 0', detail: 'Morocco\'s technical superiority in midfield sealed the win.' },
+        { date: 'June 19', home: 'Brazil', away: 'Haiti', score: '3 - 0', detail: 'Brazil put on an attacking clinic at Philadelphia Stadium.' },
+        { date: 'June 19', home: 'Paraguay', away: 'Türkiye', score: '1 - 0', detail: 'A tightly contested match decided by a counter-attacking goal.' },
+        { date: 'June 18', home: 'Czechia', away: 'South Africa', score: '1 - 1', detail: 'A balanced match where both teams shared possession equally.' },
+        { date: 'June 18', home: 'Switzerland', away: 'Bosnia-Herzegovina', score: '4 - 1', detail: 'Switzerland\'s midfield transition speed proved too high for Bosnia\'s defensive block.' },
+        { date: 'June 18', home: 'Canada', away: 'Qatar', score: '6 - 0', detail: 'Canada\'s high-intensity Gegenpress overwhelmed Qatar\'s backline.' },
+        { date: 'June 18', home: 'Mexico', away: 'South Korea', score: '1 - 0', detail: 'A narrow victory for Mexico, sealing their top position in Group A.' },
+        { date: 'June 17', home: 'Portugal', away: 'DR Congo', score: '1 - 1', detail: 'DR Congo surprised Portugal with a physical counter-pressing strategy.' },
+        { date: 'June 17', home: 'England', away: 'Croatia', score: '4 - 2', detail: 'A high-scoring classic highlighting England\'s offensive depth.' },
+        { date: 'June 17', home: 'Ghana', away: 'Panama', score: '1 - 0', detail: 'Ghana\'s solid mid-block successfully protected their first-half lead.' },
+        { date: 'June 17', home: 'Colombia', away: 'Uzbekistan', score: '3 - 1', detail: 'Colombia\'s vertical passing patterns broke down Uzbekistan\'s defense.' },
+        { date: 'June 16', home: 'France', away: 'Senegal', score: '3 - 1', detail: 'France\'s tactical superiority was too much for Senegal\'s high line.' },
+        { date: 'June 16', home: 'Norway', away: 'Iraq', score: '4 - 1', detail: 'Norway\'s physical strikers dominated aerial duels.' },
+        { date: 'June 16', home: 'Argentina', away: 'Algeria', score: '3 - 0', detail: 'Argentina\'s tiki-taka play style broke Algeria\'s defensive lines.' },
+        { date: 'June 16', home: 'Austria', away: 'Jordan', score: '3 - 1', detail: 'Austria controlled possession, converting their chances efficiently.' },
+        { date: 'June 15', home: 'Spain', away: 'Cape Verde', score: '0 - 0', detail: 'Cape Verde\'s low-block keeper put on a man-of-the-match performance.' },
+        { date: 'June 15', home: 'Belgium', away: 'Egypt', score: '1 - 1', detail: 'A tactical chess match with both teams canceling each other out.' },
+        { date: 'June 15', home: 'Saudi Arabia', away: 'Uruguay', score: '1 - 1', detail: 'Uruguay\'s late header salvaged a draw.' },
+        { date: 'June 15', home: 'Iran', away: 'New Zealand', score: '2 - 2', detail: 'An entertaining draw featuring fast offensive transitions.' },
+        { date: 'June 14', home: 'Germany', away: 'Curaçao', score: '7 - 1', detail: 'Germany\'s record-breaking opening match, demonstrating tactical masterclass.' },
+        { date: 'June 14', home: 'Netherlands', away: 'Japan', score: '2 - 2', detail: 'Japan\'s speed on the counter neutralized Netherlands\' possession play.' },
+        { date: 'June 14', home: 'Ivory Coast', away: 'Ecuador', score: '1 - 0', detail: 'Ivory Coast\'s high defensive line successfully kept Ecuador at bay.' },
+        { date: 'June 14', home: 'Sweden', away: 'Tunisia', score: '5 - 1', detail: 'Sweden\'s attacking width stretched Tunisia\'s backline.' },
+        { date: 'June 13', home: 'Qatar', away: 'Switzerland', score: '1 - 1', detail: 'A hard-fought draw where Qatar\'s organization frustrated Switzerland.' },
+        { date: 'June 13', home: 'Brazil', away: 'Morocco', score: '1 - 1', detail: 'Morocco\'s high press caused issues for Brazil\'s buildup.' },
+        { date: 'June 13', home: 'Scotland', away: 'Haiti', score: '1 - 0', detail: 'Scotland\'s set-piece header decided the match.' },
+        { date: 'June 13', home: 'Australia', away: 'Türkiye', score: '2 - 0', detail: 'Australia\'s physical counters secured the win.' },
+        { date: 'June 12', home: 'Canada', away: 'Bosnia-Herzegovina', score: '1 - 1', detail: 'A draw where Canada dominated shots but lacked efficiency.' },
+        { date: 'June 12', home: 'United States', away: 'Paraguay', score: '4 - 1', detail: 'USA opened their campaign with high offensive press.' },
+        { date: 'June 11', home: 'Mexico', away: 'South Africa', score: '2 - 0', detail: 'Mexico\'s opening night victory, igniting the home crowd.' },
+        { date: 'June 11', home: 'South Korea', away: 'Czechia', score: '2 - 1', detail: 'South Korea\'s late winner secured all three points.' }
       ];
 
-      const matchedTeams = teams.filter(t => textLower.includes(t.name.toLowerCase()));
+      // Match query processing
+      let foundMatch = null;
+      for (const m of realMatches) {
+        const homeL = m.home.toLowerCase();
+        const awayL = m.away.toLowerCase();
+        
+        // Handle variations like "US", "USA", "United States", "Korea", "South Korea"
+        const mentionsHome = textLower.includes(homeL) || 
+          (m.home === 'United States' && (textLower.includes('usa') || textLower.includes('u.s.'))) ||
+          (m.home === 'South Korea' && (textLower.includes('korea') || textLower.includes('rep. of korea')));
+        
+        const mentionsAway = textLower.includes(awayL) || 
+          (m.away === 'United States' && (textLower.includes('usa') || textLower.includes('u.s.'))) ||
+          (m.away === 'South Korea' && (textLower.includes('korea') || textLower.includes('rep. of korea')));
 
-      if (matchedTeams.length >= 2) {
-        const t1 = matchedTeams[0];
-        const t2 = matchedTeams[1];
-        
-        // Calculate a stable mock score based on team names
-        const val1 = (t1.name.charCodeAt(0) + t2.name.charCodeAt(0)) % 4;
-        const val2 = (t1.name.charCodeAt(1) + t2.name.charCodeAt(1)) % 3;
-        
-        aiText = `Query processed inside TEE Secure Enclave. DeAI Sports Model result:\n\nYesterday's international fixture between ${t1.flag} **${t1.name}** and ${t2.flag} **${t2.name}** ended in a **${val1} - ${val2}** scoreline. ${t1.name} dominated midfield possession at 58% utilizing a structured mid-block, while ${t2.name} looked dangerous on rapid counter-attacks. Cryptographic verification registered on consensus ledger.`;
-      } else if (matchedTeams.length === 1) {
-        const t = matchedTeams[0];
-        aiText = `Retrieved squad parameters for ${t.flag} **${t.name}** from secure TEE memory registers:\n- Team Rating Index: A-\n- Tactical Blueprint: 4-3-3 High Press\n- Physical Capacity: ${t.stats}\nOur Attested model projects a 74% win probability for their next bracket fixture.`;
-      } else if (textLower.includes('tactic') || textLower.includes('formation') || textLower.includes('play')) {
-        aiText = "Based on our model analysis in TEE: A 4-3-3 formation with high defensive line matches best against defensive low-blocks. Gegenpress tactics require a high physical chemistry index (>85%) to prevent transition gaps.";
-      } else if (textLower.includes('predict') || textLower.includes('winner') || textLower.includes('cup')) {
-        aiText = "0G DeAI engine calculates France and Brazil as the highest probability finalists (26.4% and 24.1% respectively). Argentine squad depth shows a 68% win-rate in standard climate simulations.";
-      } else if (textLower.includes('tee') || textLower.includes('security') || textLower.includes('attestation')) {
-        aiText = "The Scout Enclave isolates all tactical data inside Intel TDX hardware. The system signs the resulting reports in isolated memory, proving that no third-party tampered with the weights or statistics during inference.";
+        if (mentionsHome && mentionsAway) {
+          foundMatch = m;
+          break;
+        }
+      }
+
+      const mentionsYesterday = textLower.includes('yesterday') || textLower.includes('recent') || textLower.includes('last night') || textLower.includes('latest matches') || textLower.includes('june 23');
+      const mentionsToday = textLower.includes('today') || textLower.includes('schedule') || textLower.includes('fixtures') || textLower.includes('matches today') || textLower.includes('june 24');
+
+      if (foundMatch) {
+        aiText = `Query processed inside TEE Secure Enclave. DeAI Sports Model result:\n\n` +
+          `The FIFA World Cup 2026 Group Stage match between ${getFlag(foundMatch.home)} **${foundMatch.home}** and ${getFlag(foundMatch.away)} **${foundMatch.away}** on **${foundMatch.date}, 2026** ended in a **${foundMatch.score}** scoreline.\n\n` +
+          `• **Tactical Breakdown:** ${foundMatch.detail}\n\n` +
+          `*Cryptographic attestation signed and sealed under block consensus height ${blockHeight}.*`;
+      } else if (mentionsYesterday) {
+        aiText = `**Yesterday's FIFA World Cup 2026 Match Results (June 23, 2026) retrieved from secure enclave memory registers:**\n\n` +
+          `• 🏴󠁧󠁢󠁥󠁮󠁧󠁿 **England 0 - 0 Ghana** 🇬🇭 (Boston Stadium, Group L) — Resilient Ghanaian low-block (5-4-1) successfully held off England's offense. Possession: 58% vs 42%.\n` +
+          `• 🇵🇹 **Portugal 5 - 0 Uzbekistan** 🇺🇿 (Group G) — Portugal put on an attacking masterclass, opening transitions through the half-spaces.\n` +
+          `• 🇭🇷 **Croatia 1 - 0 Panama** 🇵🇦 (Group K) — Croatian tactical patience paid off with a decisive set-piece header.\n` +
+          `• 🇨🇴 **Colombia 1 - 0 DR Congo** 🇨🇩 (Group L) — High vertical press transitions from Colombia created the late breakthrough.\n\n` +
+          `*Inference completed within Intel TDX hardware-isolated enclave. Signed payload payload signature sealed.*`;
+      } else if (mentionsToday) {
+        aiText = `**Today's FIFA World Cup 2026 Schedule & Predictor (June 24, 2026) retrieved from secure enclave memory registers:**\n\n` +
+          `The group stage wraps up today for Groups A, B, and C with high-stakes fixtures:\n` +
+          `• 🇨🇭 **Switzerland vs Canada** 🇨🇦 (Group B) — *DeAI Projection: Canada win (45%), Draw (35%), Switzerland win (20%)*\n` +
+          `• 🇲🇦 **Morocco vs Haiti** 🇭🇹 (Group C) — *DeAI Projection: Morocco win (72%), Haiti win (10%)*\n` +
+          `• 🏴󠁧󠁢󠁳󠁣󠁴󠁿 **Scotland vs Brazil** 🇧🇷 (Group C) — *DeAI Projection: Brazil win (68%), Scotland win (12%)*\n` +
+          `• 🇨🇿 **Czechia vs Mexico** 🇲🇽 (Group A) — *DeAI Projection: Mexico win (52%), Czechia win (22%)*\n` +
+          `• 🇧🇦 **Bosnia-Herzegovina vs Qatar** 🇶🇦 (Group B) — *DeAI Projection: Draw (48%), Bosnia win (32%)*\n` +
+          `• 🇿🇦 **South Africa vs South Korea** 🇰🇷 (Group A) — *DeAI Projection: South Korea win (58%), South Africa win (18%)*\n\n` +
+          `*Consensus metrics updated. Memory state attested.*`;
       } else {
-        const truncatedQuery = userMsg.text.split(' ').slice(0, 5).join(' ');
-        aiText = `Secure Scout model output for: "${truncatedQuery}..." \n\n"Tactical databases indicate that low-block defensive structures suffer an 11% error increase under high offensive press load. Midfield transition speed remains the primary scoring multiplier."\n\nAttestation proof verified under block height ${blockHeight}.`;
+        // Check for single team query
+        const uniqueTeams = Array.from(new Set(realMatches.flatMap(m => [m.home, m.away])));
+        const matchedSingleTeam = uniqueTeams.find(t => 
+          textLower.includes(t.toLowerCase()) || 
+          (t === 'United States' && textLower.includes('usa')) || 
+          (t === 'South Korea' && textLower.includes('korea'))
+        );
+
+        if (matchedSingleTeam) {
+          const teamMatches = realMatches.filter(m => 
+            m.home.toLowerCase() === matchedSingleTeam.toLowerCase() || 
+            m.away.toLowerCase() === matchedSingleTeam.toLowerCase()
+          );
+
+          if (teamMatches.length > 0) {
+            aiText = `**TEE Enclave Query: Retrieved World Cup 2026 match history for ${getFlag(matchedSingleTeam)} ${matchedSingleTeam}**\n\n` +
+              teamMatches.map(m => `• **${m.date}**: ${getFlag(m.home)} ${m.home} **${m.score}** ${getFlag(m.away)} ${m.away} — *${m.detail}*`).join('\n') +
+              `\n\n*Intel TDX Cryptographic Proof generated and sealed.*`;
+          }
+        }
+      }
+
+      // If still empty, fall back to general tactical answers
+      if (!aiText) {
+        if (textLower.includes('tactic') || textLower.includes('formation') || textLower.includes('play')) {
+          aiText = "Based on our model analysis in TEE: A 4-3-3 formation with high defensive line matches best against defensive low-blocks. Gegenpress tactics require a high physical chemistry index (>85%) to prevent transition gaps.";
+        } else if (textLower.includes('predict') || textLower.includes('winner') || textLower.includes('cup')) {
+          aiText = "0G DeAI engine calculates France and Brazil as the highest probability finalists (26.4% and 24.1% respectively). Argentine squad depth shows a 68% win-rate in standard climate simulations.";
+        } else if (textLower.includes('tee') || textLower.includes('security') || textLower.includes('attestation')) {
+          aiText = "The Scout Enclave isolates all tactical data inside Intel TDX hardware. The system signs the resulting reports in isolated memory, proving that no third-party tampered with the weights or statistics during inference.";
+        } else {
+          const truncatedQuery = userMsg.text.split(' ').slice(0, 5).join(' ');
+          aiText = `Secure Scout model output for: "${truncatedQuery}..." \n\n"Tactical databases indicate that low-block defensive structures suffer an 11% error increase under high offensive press load. Midfield transition speed remains the primary scoring multiplier."\n\nAttestation proof verified under block height ${blockHeight}.`;
+        }
       }
 
       const chatHash = generateKeccakHash(userMsg.text + aiText);
