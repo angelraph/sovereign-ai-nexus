@@ -218,8 +218,6 @@ const interpolate = (p1: { x: number, y: number }, p2: { x: number, y: number },
 
 const getDebateExchange = (
   round: number, 
-  attackerName: string, 
-  defenderName: string, 
   attackerRole: string, 
   defenderRole: string, 
   isGoal: boolean
@@ -1030,7 +1028,7 @@ export default function App() {
     } else {
       const missedFinishes = [
         "but the shot is saved with an acrobatic dive by the goalkeeper!",
-        `but the defender ${defense} to end the danger.`,
+        `but ${defenderName} ${defense} to end the danger.`,
         "but the shot flies just wide of the post!",
         "but the final pass is intercepted at the last second!"
       ];
@@ -1148,7 +1146,7 @@ export default function App() {
 
       if (timeInRound >= 1000 && !simulationRef.current.triggers[attackerDebateKey]) {
         simulationRef.current.triggers[attackerDebateKey] = true;
-        const debate = getDebateExchange(currentRoundNum, h.isUserAttacking ? user.name : opp.name, h.isUserAttacking ? opp.name : user.name, h.isUserAttacking ? user.role : opp.role, h.isUserAttacking ? opp.role : user.role, h.isGoal);
+        const debate = getDebateExchange(currentRoundNum, h.isUserAttacking ? user.role : opp.role, h.isUserAttacking ? opp.role : user.role, h.isGoal);
         setDebateMessages(prev => [...prev, {
           id: `att_${currentRoundNum}`,
           minute: h.minute,
@@ -1161,7 +1159,7 @@ export default function App() {
 
       if (timeInRound >= 2800 && !simulationRef.current.triggers[defenderDebateKey]) {
         simulationRef.current.triggers[defenderDebateKey] = true;
-        const debate = getDebateExchange(currentRoundNum, h.isUserAttacking ? user.name : opp.name, h.isUserAttacking ? opp.name : user.name, h.isUserAttacking ? user.role : opp.role, h.isUserAttacking ? opp.role : user.role, h.isGoal);
+        const debate = getDebateExchange(currentRoundNum, h.isUserAttacking ? user.role : opp.role, h.isUserAttacking ? opp.role : user.role, h.isGoal);
         setDebateMessages(prev => [...prev, {
           id: `def_${currentRoundNum}`,
           minute: h.minute,
