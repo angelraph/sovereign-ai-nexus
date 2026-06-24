@@ -1861,6 +1861,59 @@ export default function App() {
                   )}
                 </div>
 
+                {/* Zero Cup Milestones & Knockout Schedule Tracking */}
+                <div className="bg-[#0f172a]/30 border border-slate-800/80 rounded-xl p-5 space-y-4 glow-card mt-6">
+                  <div className="flex items-center space-x-2 border-b border-slate-800 pb-3">
+                    <Trophy className="w-5 h-5 text-yellow-400" />
+                    <div>
+                      <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                        The Zero Cup: 0G's Global Vibe Coding Tournament Bracket Tracker
+                      </h4>
+                      <p className="text-[10px] text-slate-400">Lockstep calendar synchronizing Zero Cup announcements with real FIFA World Cup 2026 milestones</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-7 gap-3 text-center">
+                    {[
+                      { date: 'June 15', title: 'Start', desc: 'Submissions Open', status: 'completed' },
+                      { date: 'June 23', title: 'Deadline', desc: 'Submissions Close', status: 'completed' },
+                      { date: 'June 27', title: 'Top 32', desc: 'Knockout Bracket', status: 'current' },
+                      { date: 'July 3', title: 'Top 16', desc: 'Field Narrows', status: 'upcoming' },
+                      { date: 'July 7', title: 'Top 8', desc: 'Community Voting', status: 'upcoming' },
+                      { date: 'July 11 - 15', title: 'Finals', desc: 'Top 4 & Top 2', status: 'upcoming' },
+                      { date: 'July 19', title: 'Champion', desc: 'Crowned July 19', status: 'upcoming' }
+                    ].map((step, idx) => (
+                      <div 
+                        key={idx} 
+                        className={`relative rounded-xl p-3 border transition-all duration-300 ${
+                          step.status === 'completed' 
+                            ? 'bg-emerald-950/10 border-emerald-500/20 text-emerald-400/80' 
+                            : step.status === 'current'
+                            ? 'bg-cyan-950/20 border-cyan-400/40 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.15)] scale-[1.02]'
+                            : 'bg-slate-900/40 border-slate-850 text-slate-500'
+                        }`}
+                      >
+                        <div className="text-[9px] font-mono tracking-wider mb-1 uppercase font-bold">{step.date}</div>
+                        <div className={`text-xs font-extrabold ${step.status === 'current' ? 'text-white' : ''}`}>{step.title}</div>
+                        <div className="text-[9px] mt-0.5 font-medium leading-tight">{step.desc}</div>
+                        {step.status === 'completed' && (
+                          <span className="absolute top-1 right-2 text-[8px] bg-emerald-500/10 text-emerald-400 px-1 py-0.5 rounded border border-emerald-500/20 font-bold uppercase">Done</span>
+                        )}
+                        {step.status === 'current' && (
+                          <span className="absolute top-1 right-2 text-[8px] bg-cyan-500/20 text-cyan-400 px-1 py-0.5 rounded border border-cyan-400/30 font-bold uppercase animate-pulse">Active</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="bg-[#121A2C]/20 border border-slate-850 rounded-lg p-3 text-[10px] text-slate-400 flex items-start space-x-2 leading-relaxed">
+                    <Sparkles className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="text-slate-200">Zero Cup Prize Pool Distribution:</strong> The $17,000 tournament field rewards cash payouts starting from the Top 8 onward: Champion ($8,500) • Runner-Up ($3,500) • 3rd/4th ($1,500 each) • 5th–8th ($500 each). This console uses 0G Studio DeAI and storage proof components directly within the submission parameters.
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
           )}
